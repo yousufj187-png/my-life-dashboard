@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Dashboard - PKR Finance & Habit Hub</title>
+    <!-- Tailwind CSS for sleek modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col pb-20 md:pb-6">
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-xl text-xl font-bold">🚀</div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">Life Dashboard</h1>
+                    <p class="text-xs text-slate-400">Finance & Habit Hub (PKR)</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <span class="text-xs text-slate-400 block">Net Balance</span>
+                <span id="headerBalance" class="text-sm font-bold text-emerald-400">Rs. 0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-white border-b border-slate-200 sticky top-14 z-40">
+        <div class="max-w-4xl mx-auto flex justify-around overflow-x-auto hide-scrollbar">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn py-3 px-4 font-semibold text-sm border-b-2 border-indigo-600 text-indigo-600 flex items-center space-x-2 whitespace-nowrap">
+                <i class="fa-solid fa-chart-pie"></i><span>Overview</span>
+            </button>
+            <button onclick="switchTab('income')" id="tab-income" class="tab-btn py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 whitespace-nowrap">
+                <i class="fa-solid fa-money-bill-trend-up"></i><span>Income Center</span>
+            </button>
+            <button onclick="switchTab('finance')" id="tab-finance" class="tab-btn py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 whitespace-nowrap">
+                <i class="fa-solid fa-wallet"></i><span>Finance Calendar</span>
+            </button>
+            <button onclick="switchTab('habits')" id="tab-habits" class="tab-btn py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 whitespace-nowrap">
+                <i class="fa-solid fa-calendar-check"></i><span>Habit Grid</span>
+            </button>
+            <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 whitespace-nowrap">
+                <i class="fa-solid fa-gear"></i><span>Backup & Settings</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="max-w-4xl mx-auto w-full p-4 flex-1">
+
+        <!-- ================= OVERVIEW TAB ================= -->
+        <section id="view-dashboard" class="space-y-6">
+            <!-- Balance & Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Total Net Balance</div>
+                    <div class="text-2xl font-extrabold text-slate-900" id="dashBalance">Rs. 0.00</div>
+                    <div class="text-xs text-slate-400 mt-2">Income minus Expenses</div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="text-xs font-medium text-emerald-600 uppercase tracking-wider mb-1">Total Income</div>
+                    <div class="text-2xl font-extrabold text-emerald-600" id="dashIncome">Rs. 0.00</div>
+                    <div class="text-xs text-slate-400 mt-2">All time earnings</div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="text-xs font-medium text-rose-600 uppercase tracking-wider mb-1">Total Expenses</div>
+                    <div class="text-2xl font-extrabold text-rose-600" id="dashExpense">Rs. 0.00</div>
+                    <div class="text-xs text-slate-400 mt-2">All time spending</div>
+                </div>
+            </div>
+
+            <!-- Quick Add Forms Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Add Expense Form -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-lg font-bold mb-4 text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-minus-circle text-rose-600"></i> Add Expense
+                    </h2>
+                    <form id="quickExpenseForm" class="space-y-3">
+                        <input type="text" id="expTitle" placeholder="Expense Title (e.g. Coffee, Groceries, Rent)" required class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="number" step="0.01" id="expAmount" placeholder="Amount (Rs.)" required class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <select id="expCategory" class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="Food">Food & Dining</option>
+                                <option value="Bills">Bills & Utilities</option>
+                                <option value="Shopping">Shopping</option>
+                                <option value="Health">Health</option>
+                                <option value="Travel">Travel / Fuel</option>
+                                <option value="Fun">Entertainment</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <input type="date" id="expDate" required class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button type="submit" class="w-full bg-rose-600 text-white font-semibold py-3 rounded-xl hover:bg-rose-700 transition duration-150 text-sm shadow-md shadow-rose-100">
+                            Add Expense Entry
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Today's Habits Checklist -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-fire text-amber-500"></i> Today's Habits
+                        </h2>
+                        <span class="text-xs font-semibold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full" id="todayDateLabel">Today</span>
+                    </div>
+
+                    <!-- New Habit Input -->
+                    <form id="addHabitForm" class="flex gap-2 mb-4">
+                        <input type="text" id="habitNameInput" placeholder="Add new habit..." required class="flex-1 p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button type="submit" class="bg-slate-900 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-800">Add</button>
+                    </form>
+
+                    <!-- Habit Checklist -->
+                    <div id="todayHabitsList" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Stream -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-slate-900">Recent Financial Transactions</h2>
+                    <span class="text-xs text-slate-400">Income & Expenses</span>
+                </div>
+                <div id="recentTxList" class="divide-y divide-slate-100"></div>
+            </div>
+        </section>
+
+
+        <!-- ================= DEDICATED INCOME TAB ================= -->
+        <section id="view-income" class="hidden space-y-6">
+            <!-- Add Income Card -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-bold mb-4 text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle text-emerald-600"></i> Add New Income Source
+                </h2>
+                <form id="incomeForm" class="space-y-3">
+                    <input type="text" id="incTitle" placeholder="Income Title (e.g., Monthly Salary, Freelance Project, Rental Income)" required class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <input type="number" step="0.01" id="incAmount" placeholder="Amount in PKR (Rs.)" required class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <select id="incCategory" class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="Salary">Salary</option>
+                            <option value="Freelance">Freelance</option>
+                            <option value="Business">Business</option>
+                            <option value="Investment">Investment</option>
+                            <option value="Gift">Gift / Bonus</option>
+                            <option value="Other">Other Income</option>
+                        </select>
+                        <input type="date" id="incDate" required class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 text-white font-semibold py-3 rounded-xl hover:bg-emerald-700 transition duration-150 text-sm shadow-md shadow-emerald-100">
+                        Record Income Entry
+                    </button>
+                </form>
+            </div>
+
+            <!-- Income History List -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Income Records & History</h2>
+                        <p class="text-xs text-slate-400">All earnings logged in PKR</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 block">Total Earned</span>
+                        <span class="text-lg font-extrabold text-emerald-600" id="incomeTabTotal">Rs. 0</span>
+                    </div>
+                </div>
+                <div id="incomeHistoryList" class="divide-y divide-slate-100"></div>
+            </div>
+        </section>
+
+
+        <!-- ================= FINANCE CALENDAR TAB ================= -->
+        <section id="view-finance" class="hidden space-y-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <!-- Month Selector Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <button onclick="changeFinanceMonth(-1)" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <h2 class="text-lg font-bold text-slate-900" id="financeMonthTitle">Month Year</h2>
+                    <button onclick="changeFinanceMonth(1)" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- Calendar Week Header -->
+                <div class="calendar-grid text-center font-semibold text-xs text-slate-400 mb-2">
+                    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                </div>
+
+                <!-- Calendar Days Grid -->
+                <div id="financeCalendarGrid" class="calendar-grid gap-1"></div>
+            </div>
+
+            <!-- Selected Day Detail View -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                    <h3 class="font-bold text-slate-900" id="selectedDateTitle">Select a date from calendar</h3>
+                    <div id="selectedDateSummary" class="text-xs font-semibold"></div>
+                </div>
+                <div id="selectedDateTxList" class="divide-y divide-slate-100">
+                    <p class="text-xs text-slate-400 py-4 text-center">Click any date on the calendar above to view daily details.</p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= HABITS GRID TAB ================= -->
+        <section id="view-habits" class="hidden space-y-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <!-- Month Selector Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <button onclick="changeHabitMonth(-1)" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 text-center" id="habitMonthTitle">Habit Matrix</h2>
+                        <p class="text-xs text-slate-400 text-center">Check off habits for any day in the selected month</p>
+                    </div>
+                    <button onclick="changeHabitMonth(1)" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- Habit Grid Scrollable Matrix -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead>
+                            <tr id="habitTableHeader" class="border-b border-slate-200 text-xs font-semibold text-slate-400">
+                                <th class="p-2 sticky left-0 bg-white z-10 w-44">Habit Name</th>
+                                <th class="p-2 text-center w-16">Streak</th>
+                                <!-- Days 1-31 dynamically injected -->
+                            </tr>
+                        </thead>
+                        <tbody id="habitTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= SETTINGS & BACKUP TAB ================= -->
+        <section id="view-settings" class="hidden space-y-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-database text-indigo-600"></i> Storage & Data Protection
+                </h2>
+                <p class="text-sm text-slate-600 leading-relaxed mb-4">
+                    Your financial and habit data is saved directly inside your local browser storage. It <strong>never expires</strong> or disappears automatically.
+                </p>
+                <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl text-xs text-slate-600">
+                    <div>
+                        <span class="block font-semibold text-slate-900">Storage Technology</span>
+                        <span>Browser LocalStorage (Offline)</span>
+                    </div>
+                    <div>
+                        <span class="block font-semibold text-slate-900">Current Storage Used</span>
+                        <span id="storageUsedLabel">Calculating...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export / Import Backup -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-file-export text-emerald-600"></i> Backup & Phone Transfer
+                </h2>
+                <p class="text-sm text-slate-600">Export your complete database as a file to save a backup copy or move it to your phone.</p>
+                
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="exportBackup()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-emerald-700 shadow-md shadow-emerald-100 flex items-center gap-2">
+                        <i class="fa-solid fa-download"></i> Export Data Backup
+                    </button>
+
+                    <label class="bg-slate-800 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-slate-900 cursor-pointer flex items-center gap-2">
+                        <i class="fa-solid fa-upload"></i> Restore / Import Backup
+                        <input type="file" id="importFile" accept=".json" onchange="importBackup(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-rose-200 space-y-4">
+                <h2 class="text-lg font-bold text-rose-600 flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Danger Zone
+                </h2>
+                <p class="text-sm text-slate-600">Clear all records and start fresh.</p>
+                <button onclick="clearAllData()" class="bg-rose-50 text-rose-600 border border-rose-200 px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-rose-600 hover:text-white transition">
+                    Clear All Data
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+        const STORAGE_KEY = 'life_dashboard_pkr_v2_data';
+        
+        let state = {
+            transactions: [],
+            habits: [],
+            habitLogs: {}
+        };
+
+        let currentFinanceDate = new Date();
+        let currentHabitDate = new Date();
+        let selectedCalendarDateStr = new Date().toISOString().split('T')[0];
+
+        window.onload = function() {
+            loadState();
+            const todayStr = getTodayStr();
+            document.getElementById('expDate').value = todayStr;
+            document.getElementById('incDate').value = todayStr;
+            updateAllViews();
+        };
+
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    state = JSON.parse(saved);
+                } catch(e) {
+                    console.error('Failed to parse saved state:', e);
+                }
+            } else {
+                // Initial Default Data
+                const today = getTodayStr();
+                state.transactions = [
+                    { id: 1, title: 'Monthly Salary', amount: 150000, type: 'income', category: 'Salary', date: today },
+                    { id: 2, title: 'Grocery Shopping', amount: 8500, type: 'expense', category: 'Food', date: today }
+                ];
+                state.habits = [
+                    { id: 101, name: 'Drink 3L Water', createdDate: today },
+                    { id: 102, name: 'Read Book 20 Mins', createdDate: today }
+                ];
+                state.habitLogs = {};
+                saveState();
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            updateAllViews();
+        }
+
+        function getTodayStr() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function switchTab(tabName) {
+            ['dashboard', 'income', 'finance', 'habits', 'settings'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).classList.remove('border-indigo-600', 'text-indigo-600');
+                document.getElementById(`tab-${t}`).classList.add('border-transparent', 'text-slate-500');
+            });
+
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).classList.add('border-indigo-600', 'text-indigo-600');
+            document.getElementById(`tab-${tabName}`).classList.remove('border-transparent', 'text-slate-500');
+
+            if(tabName === 'income') renderIncomeTab();
+            if(tabName === 'finance') renderFinanceCalendar();
+            if(tabName === 'habits') renderHabitsGrid();
+            if(tabName === 'settings') updateStorageStats();
+        }
+
+        function updateAllViews() {
+            renderOverview();
+            renderIncomeTab();
+            renderFinanceCalendar();
+            renderHabitsGrid();
+            updateStorageStats();
+        }
+
+        // ================= OVERVIEW LOGIC =================
+        function renderOverview() {
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            state.transactions.forEach(tx => {
+                const amt = parseFloat(tx.amount);
+                if (tx.type === 'income') totalIncome += amt;
+                else totalExpense += amt;
+            });
+
+            const netBalance = totalIncome - totalExpense;
+
+            document.getElementById('headerBalance').innerText = `Rs. ${netBalance.toLocaleString()}`;
+            document.getElementById('dashBalance').innerText = `Rs. ${netBalance.toLocaleString()}`;
+            document.getElementById('dashIncome').innerText = `Rs. ${totalIncome.toLocaleString()}`;
+            document.getElementById('dashExpense').innerText = `Rs. ${totalExpense.toLocaleString()}`;
+            document.getElementById('todayDateLabel').innerText = getTodayStr();
+
+            // Recent Transactions List
+            const recentList = document.getElementById('recentTxList');
+            recentList.innerHTML = '';
+            
+            const sortedTx = [...state.transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
+            if(sortedTx.length === 0) {
+                recentList.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">No transactions recorded yet.</p>`;
+            } else {
+                sortedTx.slice(0, 6).forEach(tx => {
+                    recentList.appendChild(createTxElement(tx));
+                });
+            }
+
+            // Habits Checklist for Today
+            const habitList = document.getElementById('todayHabitsList');
+            habitList.innerHTML = '';
+            const todayStr = getTodayStr();
+
+            if(state.habits.length === 0) {
+                habitList.innerHTML = `<p class="text-xs text-slate-400 py-3 text-center">No habits configured.</p>`;
+            } else {
+                state.habits.forEach(h => {
+                    const logKey = `${todayStr}_${h.id}`;
+                    const isChecked = !!state.habitLogs[logKey];
+
+                    const div = document.createElement('div');
+                    div.className = `flex items-center justify-between p-2.5 rounded-xl border ${isChecked ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'} transition`;
+                    div.innerHTML = `
+                        <label class="flex items-center space-x-3 cursor-pointer select-none">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleHabitLog('${todayStr}', ${h.id})" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+                            <span class="text-sm font-medium ${isChecked ? 'line-through text-slate-400' : 'text-slate-800'}">${h.name}</span>
+                        </label>
+                        <span class="text-xs font-semibold text-amber-600">🔥 ${calculateStreak(h.id)} days</span>
+                    `;
+                    habitList.appendChild(div);
+                });
+            }
+        }
+
+        function createTxElement(tx) {
+            const isInc = tx.type === 'income';
+            const div = document.createElement('div');
+            div.className = 'py-3 flex justify-between items-center text-sm';
+            div.innerHTML = `
+                <div>
+                    <div class="font-semibold text-slate-800">${tx.title}</div>
+                    <div class="text-xs text-slate-400">📅 ${tx.date} • <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">${tx.category}</span></div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="font-bold ${isInc ? 'text-emerald-600' : 'text-rose-600'}">
+                        ${isInc ? '+' : '-'}Rs. ${parseFloat(tx.amount).toLocaleString()}
+                    </span>
+                    <button onclick="deleteTx(${tx.id})" class="text-slate-300 hover:text-rose-500 transition text-xs">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            return div;
+        }
+
+        // Add Quick Expense Listener
+        document.getElementById('quickExpenseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const title = document.getElementById('expTitle').value.trim();
+            const amount = parseFloat(document.getElementById('expAmount').value);
+            const date = document.getElementById('expDate').value;
+            const category = document.getElementById('expCategory').value;
+
+            if(!title || isNaN(amount)) return;
+
+            state.transactions.push({ id: Date.now(), title, amount, type: 'expense', category, date });
+            document.getElementById('expTitle').value = '';
+            document.getElementById('expAmount').value = '';
+            saveState();
+        });
+
+        // Add Habit Listener
+        document.getElementById('addHabitForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('habitNameInput');
+            const name = input.value.trim();
+            if(!name) return;
+
+            state.habits.push({ id: Date.now(), name, createdDate: getTodayStr() });
+            input.value = '';
+            saveState();
+        });
+
+        // ================= INCOME SECTION LOGIC =================
+        document.getElementById('incomeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const title = document.getElementById('incTitle').value.trim();
+            const amount = parseFloat(document.getElementById('incAmount').value);
+            const category = document.getElementById('incCategory').value;
+            const date = document.getElementById('incDate').value;
+
+            if(!title || isNaN(amount)) return;
+
+            state.transactions.push({ id: Date.now(), title, amount, type: 'income', category, date });
+            document.getElementById('incTitle').value = '';
+            document.getElementById('incAmount').value = '';
+            saveState();
+        });
+
+        function renderIncomeTab() {
+            const incomeList = document.getElementById('incomeHistoryList');
+            incomeList.innerHTML = '';
+
+            const incomeTx = state.transactions
+                .filter(t => t.type === 'income')
+                .sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            let totalIncome = 0;
+
+            if(incomeTx.length === 0) {
+                incomeList.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">No income records added yet.</p>`;
+            } else {
+                incomeTx.forEach(tx => {
+                    totalIncome += parseFloat(tx.amount);
+                    incomeList.appendChild(createTxElement(tx));
+                });
+            }
+
+            document.getElementById('incomeTabTotal').innerText = `Rs. ${totalIncome.toLocaleString()}`;
+        }
+
+        function deleteTx(id) {
+            state.transactions = state.transactions.filter(t => t.id !== id);
+            saveState();
+        }
+
+        function toggleHabitLog(dateStr, habitId) {
+            const logKey = `${dateStr}_${habitId}`;
+            if(state.habitLogs[logKey]) {
+                delete state.habitLogs[logKey];
+            } else {
+                state.habitLogs[logKey] = true;
+            }
+            saveState();
+        }
+
+        function calculateStreak(habitId) {
+            let streak = 0;
+            let checkDate = new Date();
+            
+            while(true) {
+                const dateStr = checkDate.toISOString().split('T')[0];
+                const key = `${dateStr}_${habitId}`;
+                if(state.habitLogs[key]) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    if(dateStr === getTodayStr()) {
+                        checkDate.setDate(checkDate.getDate() - 1);
+                        continue;
+                    }
+                    break;
+                }
+            }
+            return streak;
+        }
+
+        // ================= FINANCE CALENDAR LOGIC =================
+        function changeFinanceMonth(delta) {
+            currentFinanceDate.setMonth(currentFinanceDate.getMonth() + delta);
+            renderFinanceCalendar();
+        }
+
+        function renderFinanceCalendar() {
+            const year = currentFinanceDate.getFullYear();
+            const month = currentFinanceDate.getMonth();
+            
+            document.getElementById('financeMonthTitle').innerText = 
+                new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            const grid = document.getElementById('financeCalendarGrid');
+            grid.innerHTML = '';
+
+            for(let i = 0; i < firstDay; i++) {
+                grid.appendChild(document.createElement('div'));
+            }
+
+            for(let day = 1; day <= daysInMonth; day++) {
+                const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                let dayIncome = 0;
+                let dayExpense = 0;
+                state.transactions.filter(t => t.date === dayStr).forEach(t => {
+                    if(t.type === 'income') dayIncome += parseFloat(t.amount);
+                    else dayExpense += parseFloat(t.amount);
+                });
+
+                const dayCell = document.createElement('div');
+                const isSelected = dayStr === selectedCalendarDateStr;
+                dayCell.className = `p-1.5 min-h-[54px] rounded-xl border text-left cursor-pointer transition flex flex-col justify-between ${
+                    isSelected ? 'ring-2 ring-indigo-600 bg-indigo-50/50 border-indigo-200' : 'border-slate-100 hover:bg-slate-50'
+                }`;
+                dayCell.onclick = () => selectCalendarDate(dayStr);
+
+                dayCell.innerHTML = `
+                    <span class="text-xs font-semibold ${dayStr === getTodayStr() ? 'bg-indigo-600 text-white rounded-full w-5 h-5 flex items-center justify-center' : 'text-slate-700'}">${day}</span>
+                    <div class="text-[10px] leading-tight space-y-0.5">
+                        ${dayIncome > 0 ? `<div class="text-emerald-600 font-bold truncate">+${(dayIncome/1000).toFixed(1)}k</div>` : ''}
+                        ${dayExpense > 0 ? `<div class="text-rose-600 font-bold truncate">-${(dayExpense/1000).toFixed(1)}k</div>` : ''}
+                    </div>
+                `;
+                grid.appendChild(dayCell);
+            }
+
+            renderSelectedDateTxList();
+        }
+
+        function selectCalendarDate(dateStr) {
+            selectedCalendarDateStr = dateStr;
+            renderFinanceCalendar();
+        }
+
+        function renderSelectedDateTxList() {
+            document.getElementById('selectedDateTitle').innerText = `Transactions for ${selectedCalendarDateStr}`;
+            const list = document.getElementById('selectedDateTxList');
+            list.innerHTML = '';
+
+            const dayTxList = state.transactions.filter(t => t.date === selectedCalendarDateStr);
+            
+            if(dayTxList.length === 0) {
+                list.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">No activity logged for this date.</p>`;
+                document.getElementById('selectedDateSummary').innerText = '';
+                return;
+            }
+
+            let inc = 0, exp = 0;
+            dayTxList.forEach(tx => {
+                if(tx.type === 'income') inc += parseFloat(tx.amount);
+                else exp += parseFloat(tx.amount);
+                list.appendChild(createTxElement(tx));
+            });
+
+            document.getElementById('selectedDateSummary').innerHTML = `
+                <span class="text-emerald-600 mr-2">+Rs. ${inc.toLocaleString()}</span>
+                <span class="text-rose-600">-Rs. ${exp.toLocaleString()}</span>
+            `;
+        }
+
+        // ================= HABITS MATRIX GRID LOGIC =================
+        function changeHabitMonth(delta) {
+            currentHabitDate.setMonth(currentHabitDate.getMonth() + delta);
+            renderHabitsGrid();
+        }
+
+        function renderHabitsGrid() {
+            const year = currentHabitDate.getFullYear();
+            const month = currentHabitDate.getMonth();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            document.getElementById('habitMonthTitle').innerText = 
+                new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+            const headerRow = document.getElementById('habitTableHeader');
+            headerRow.innerHTML = `
+                <th class="p-2 sticky left-0 bg-white z-10 w-44">Habit Name</th>
+                <th class="p-2 text-center w-16">Streak</th>
+            `;
+
+            for(let d = 1; d <= daysInMonth; d++) {
+                const th = document.createElement('th');
+                th.className = "p-1.5 text-center min-w-[28px] font-normal text-[11px]";
+                th.innerText = d;
+                headerRow.appendChild(th);
+            }
+
+            const tbody = document.getElementById('habitTableBody');
+            tbody.innerHTML = '';
+
+            if(state.habits.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${daysInMonth + 2}" class="p-4 text-center text-xs text-slate-400">No habits created. Add habits in the Overview tab.</td></tr>`;
+                return;
+            }
+
+            state.habits.forEach(h => {
+                const tr = document.createElement('tr');
+                
+                let html = `
+                    <td class="p-2 sticky left-0 bg-white font-medium text-slate-800 text-xs border-r border-slate-100 flex justify-between items-center">
+                        <span class="truncate max-w-[120px]">${h.name}</span>
+                        <button onclick="deleteHabit(${h.id})" class="text-slate-300 hover:text-rose-500 text-xs"><i class="fa-solid fa-xmark"></i></button>
+                    </td>
+                    <td class="p-2 text-center font-bold text-amber-600 text-xs">🔥${calculateStreak(h.id)}</td>
+                `;
+
+                for(let d = 1; d <= daysInMonth; d++) {
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const logKey = `${dateStr}_${h.id}`;
+                    const isChecked = !!state.habitLogs[logKey];
+
+                    html += `
+                        <td class="p-1 text-center">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''} 
+                                onclick="toggleHabitLog('${dateStr}', ${h.id})" 
+                                class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                        </td>
+                    `;
+                }
+
+                tr.innerHTML = html;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deleteHabit(id) {
+            state.habits = state.habits.filter(h => h.id !== id);
+            saveState();
+        }
+
+        // ================= SETTINGS & BACKUP LOGIC =================
+        function updateStorageStats() {
+            const raw = localStorage.getItem(STORAGE_KEY) || '';
+            const bytes = new Blob([raw]).size;
+            const kb = (bytes / 1024).toFixed(2);
+            document.getElementById('storageUsedLabel').innerText = `${kb} KB (${state.transactions.length} Transactions, ${state.habits.length} Habits)`;
+        }
+
+        function exportBackup() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `LifeDashboard_Backup_${getTodayStr()}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+
+        function importBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedState = JSON.parse(e.target.result);
+                    if (importedState.transactions && importedState.habits) {
+                        state = importedState;
+                        saveState();
+                        alert('Backup successfully restored!');
+                    } else {
+                        alert('Invalid backup file format.');
+                    }
+                } catch (err) {
+                    alert('Error reading JSON file.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearAllData() {
+            if (confirm("Are you sure you want to clear all stored data? This cannot be undone.")) {
+                localStorage.removeItem(STORAGE_KEY);
+                state = { transactions: [], habits: [], habitLogs: {} };
+                updateAllViews();
+                alert('All data has been reset.');
+            }
+        }
+    </script>
+</body>
+</html>
